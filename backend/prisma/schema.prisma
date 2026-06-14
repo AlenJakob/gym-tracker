@@ -1,6 +1,5 @@
 datasource db {
     provider = "postgresql"
-    // url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -9,11 +8,13 @@ generator client {
 }
 
 model User {
-    id        String    @id @default(cuid())
-    email     String    @unique
+    id        String   @id @default(cuid())
+    email     String   @unique
     password  String
-    createdAt DateTime  @default(now())
+    createdAt DateTime @default(now())
+
     workouts  Workout[]
+    exercises Exercise[]
 }
 
 model Workout {
@@ -23,4 +24,15 @@ model Workout {
     createdAt DateTime @default(now())
 
     user User @relation(fields: [userId], references: [id])
+}
+
+model Exercise {
+    id       String  @id @default(cuid())
+    name     String
+    isGlobal Boolean @default(false)
+
+    userId String?
+    user   User?   @relation(fields: [userId], references: [id])
+
+    createdAt DateTime @default(now())
 }

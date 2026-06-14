@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { prisma } from "../prisma";
+import { prisma } from "../../prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
-const authRouter = Router();
+const router = Router();
 
-authRouter.post("/login", async (request, response) => {
+router.post("/login", async (request, response) => {
 	const { email, password } = request.body;
 
 	// 1. Szukamy usera po emailu
@@ -52,7 +52,7 @@ authRouter.post("/login", async (request, response) => {
 	});
 });
 
-authRouter.post("/register", async (request, response) => {
+router.post("/register", async (request, response) => {
 	const { email, password } = request.body;
 
 	// 1. Walidacja wejścia
@@ -94,4 +94,4 @@ authRouter.post("/register", async (request, response) => {
 	});
 });
 
-export { authRouter };
+export default router;
