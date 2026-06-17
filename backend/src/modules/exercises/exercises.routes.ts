@@ -6,9 +6,6 @@ const router = Router();
 
 // Create custom exercises for user
 router.post("/", authMiddleware, async (req, res) => {
-	console.log("body logged", req.body);
-	console.log("test", req.user);
-
 	if (!req.user) {
 		return res.status(401).json({ message: "Unauthorized" });
 	}

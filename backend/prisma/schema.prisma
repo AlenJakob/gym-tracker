@@ -23,7 +23,8 @@ model Workout {
     name      String
     createdAt DateTime @default(now())
 
-    user User @relation(fields: [userId], references: [id])
+    user             User              @relation(fields: [userId], references: [id])
+    workoutExercises WorkoutExercise[]
 }
 
 model Exercise {
@@ -34,7 +35,25 @@ model Exercise {
     userId String?
     user   User?   @relation(fields: [userId], references: [id])
 
-    createdAt DateTime @default(now())
+    createdAt        DateTime          @default(now())
+    workoutExercises WorkoutExercise[]
 
-	@@unique([userId, name])
+    @@unique([userId, name])
+}
+
+model WorkoutExercise {
+    id String @id @default(cuid())
+
+    workoutId  String
+    exerciseId String
+
+    workout  Workout  @relation(fields: [workoutId], references: [id])
+    exercise Exercise @relation(fields: [exerciseId], references: [id])
+
+    order Int @default(0)
+
+    sets   Int?
+    reps   Int?
+    weight Float?
+    note   String?
 }

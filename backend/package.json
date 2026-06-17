@@ -5,7 +5,11 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+		"dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+		"db:studio": "prisma studio",
+		"db:generate": "prisma generate",
+		"db:migrate": "prisma migrate dev",
+		"db:backup": "docker exec gym-postgres pg_dump -U postgres gym_tracker > backups/backup.sql"
 	},
 	"keywords": [],
 	"author": "",

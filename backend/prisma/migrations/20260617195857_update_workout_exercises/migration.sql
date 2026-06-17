@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "WorkoutExercise" ADD COLUMN     "note" TEXT,
+ADD COLUMN     "order" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "reps" INTEGER,
+ADD COLUMN     "sets" INTEGER,
+ADD COLUMN     "weight" DOUBLE PRECISION;
