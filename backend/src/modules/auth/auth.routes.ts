@@ -2,8 +2,47 @@ import { Router } from "express";
 import { prisma } from "../../prisma";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { authMiddleware } from "../../middleware/authMiddleware";
 
 const router = Router();
+
+router.post("/register", async (request, response) => {
+	const { email, password } = request.body;
+
+	if (!email || !password) {
+		return response.status(400).json({
+			message: "Email and password are required",
+		});
+	}
+
+	const existingUser = await prisma.user.findUnique({
+		where: {
+			email,
+		},
+	});
+
+	if (existingUser) {
+		return response.status(409).json({
+			message: "Email already taken",
+		});
+	}
+
+	const hashedPassword = await bcrypt.hash(password, 10);
+
+	const user = await prisma.user.create({
+		data: {
+			email,
+			password: hashedPassword,
+			role: "user",
+		},
+	});
+
+	return response.status(201).json({
+		id: user.id,
+		email: user.email,
+		createdAt: user.createdAt,
+	});
+});
 
 router.post("/login", async (request, response) => {
 	const { email, password } = request.body;
@@ -23,10 +62,7 @@ router.post("/login", async (request, response) => {
 	}
 
 	// 3. Porównujemy hasło z hashem z bazy
-	const isPasswordValid = await bcrypt.compare(
-		password,
-		user.password
-	);
+	const isPasswordValid = await bcrypt.compare(password, user.password);
 
 	// 4. Jeśli hasło złe → odrzucamy
 	if (!isPasswordValid) {
@@ -43,55 +79,37 @@ router.post("/login", async (request, response) => {
 		process.env.JWT_SECRET as string,
 		{
 			expiresIn: "1d",
-		}
+		},
 	);
 
 	// 6. Zwracamy token do frontend/backend clienta
-	return response.json({
+	return response.status(200).json({
 		token,
+		user: { email: user.email, userId: user.id },
 	});
 });
 
-router.post("/register", async (request, response) => {
-	const { email, password } = request.body;
+// TODO: role endpoint WIP
+// router.patch("/users/:id/role", authMiddleware, async (req, res) => {
+// 	const currentUser = req.user;
 
-	// 1. Walidacja wejścia
-	if (!email || !password) {
-		return response.status(400).json({
-			message: "Email and password are required",
-		});
-	}
+// 	if (currentUser.role !== "admin") {
+// 		return res.status(403).json({ message: "Forbidden" });
+// 	}
 
-	// 2. Sprawdzenie czy user już istnieje
-	const existingUser = await prisma.user.findUnique({
-		where: {
-			email,
-		},
-	});
+// 	const { id } = req.params;
+// 	const { role } = req.body;
 
-	if (existingUser) {
-		return response.status(409).json({
-			message: "Email already taken",
-		});
-	}
+// 	if (!role || !["user", "admin"].includes(role)) {
+// 		return res.status(400).json({ message: "Invalid role" });
+// 	}
 
-	// 3. Hash hasła (NIGDY nie zapisujemy plaintext)
-	const hashedPassword = await bcrypt.hash(password, 10);
+// 	const updatedUser = await prisma.user.update({
+// 		where: { id },
+// 		data: { role },
+// 	});
 
-	// 4. Tworzymy usera w bazie
-	const user = await prisma.user.create({
-		data: {
-			email,
-			password: hashedPassword,
-		},
-	});
-
-	// 5. Zwracamy bezpieczne dane (bez hasła)
-	return response.status(201).json({
-		id: user.id,
-		email: user.email,
-		createdAt: user.createdAt,
-	});
-});
+// 	return res.status(200).json(updatedUser);
+// });
 
 export default router;

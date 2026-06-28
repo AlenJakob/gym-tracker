@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { authMiddleware } from "../../middleware/authMiddleware";
 import { prisma } from "../../prisma";
+import { buildExerciseWhere } from "../../utils/exercise.filter";
 
 const router = Router();
 
@@ -21,11 +22,9 @@ router.post("/", authMiddleware, async (req, res) => {
 	});
 
 	if (checkExercise) {
-		return res
-			.status(409)
-			.json({
-				message: `Exercise with this name: ${exerciseName} already exist`,
-			});
+		return res.status(409).json({
+			message: `Exercise with this name: ${exerciseName} already exist`,
+		});
 	}
 
 	const exercise = await prisma.exercise.create({
@@ -39,24 +38,28 @@ router.post("/", authMiddleware, async (req, res) => {
 	return res.status(201).json(exercise);
 });
 
-// Get all user saved exercises
+// Get all exercises
 router.get("/", authMiddleware, async (req, res) => {
 	if (!req.user) {
 		return res.status(401).json({ message: "Unauthorized" });
 	}
 
 	const { userId } = req.user;
+	const scope = req.query.scope as "mine" | "global" | undefined;
 
-	const exercise = await prisma.exercise.findMany({
-		where: {
-			OR: [{ isGlobal: false }, { userId }],
-		},
+	const where = buildExerciseWhere(scope, userId);
+
+	const exercises = await prisma.exercise.findMany({
+		where,
 		orderBy: {
 			createdAt: "desc",
 		},
 	});
 
-	return res.json(exercise);
+	return res.status(200).json({
+		items: exercises,
+		total: exercises.length,
+	});
 });
 
 // Delete user created exercises

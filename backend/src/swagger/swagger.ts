@@ -1,6 +1,7 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import { version } from "../../package.json";
 import { exercisesDocs } from "./exercises.swagger";
+import { authDocs } from "./auth.swagger";
 
 const options: swaggerJsdoc.Options = {
 	definition: {
@@ -17,6 +18,7 @@ const options: swaggerJsdoc.Options = {
 		],
 		paths: {
 			...exercisesDocs,
+			...authDocs,
 		},
 		components: {
 			securitySchemes: {

@@ -11,7 +11,7 @@ export const exercisesDocs = {
 			requestBody: {
 				required: true,
 				content: {
-					application: {
+					"application/json": {
 						schema: {
 							type: "object",
 							required: ["name"],
@@ -52,26 +52,51 @@ export const exercisesDocs = {
 			},
 		},
 		get: {
-			summary: "Get all user created Exercises",
+			summary: "Get Exercises",
+			tags: ["Exercises"],
 			security: [
 				{
 					bearerAuth: [],
 				},
 			],
+			parameters: [
+				{
+					in: "query",
+					name: "scope",
+					required: false,
+					schema: {
+						type: "string",
+						enum: ["mine", "global"],
+					},
+					description: "Filter exercises by scope",
+				},
+			],
 
 			responses: {
-				201: {
-					description: "Created exercise",
+				200: {
+					description: "Get Exercises",
 					content: {
-						application: {
+						"application/json": {
 							schema: {
-								type: "object",
-								properties: {
-									name: {
-										type: "string",
-									},
-									isGlobal: {
-										type: "boolean",
+								type: "array",
+								items: {
+									type: "object",
+									properties: {
+										id: {
+											type: "string",
+										},
+										name: {
+											type: "string",
+										},
+										userId: {
+											type: "string",
+										},
+										createdAt: {
+											type: "string",
+										},
+										isGlobal: {
+											type: "boolean",
+										},
 									},
 								},
 							},
