@@ -6,6 +6,7 @@ const router = Router();
 
 type RequestWorkout = Request<{ id: string }>;
 
+// Create workout
 router.post("/", authMiddleware, async (req: RequestWorkout, res) => {
 	if (!req.user) {
 		return res.status(401).json({ message: "Unauthorized" });
@@ -28,6 +29,7 @@ router.post("/", authMiddleware, async (req: RequestWorkout, res) => {
 	return res.status(201).json(workout);
 });
 
+// Get User Workout
 router.get("/", authMiddleware, async (req: RequestWorkout, res) => {
 	if (!req.user) {
 		return res.status(401).json({ message: "Unauthorized" });
@@ -38,12 +40,20 @@ router.get("/", authMiddleware, async (req: RequestWorkout, res) => {
 		where: {
 			userId,
 		},
+		include: {
+			workoutExercises: {
+				include: {
+					exercise: true,
+					exerciseSets: true,
+				},
+			},
+		},
 	});
 
 	return res.status(200).json(allWorkouts);
 });
 
-// create workout
+// Create workout
 router.post(
 	"/:id/exercises",
 	authMiddleware,
@@ -54,9 +64,8 @@ router.post(
 
 		const { userId } = req.user;
 		const workoutId = req.params.id;
-		const { exerciseId, reps, sets, weight } = req.body;
+		const { exerciseId } = req.body;
 
-		// 1. check the workout belong to user
 		const workout = await prisma.workout.findFirst({
 			where: {
 				id: workoutId,
@@ -68,7 +77,6 @@ router.post(
 			return res.status(404).json({ message: "Workout not found" });
 		}
 
-		// 2. check if exercise exist and belong to user ( or is global )
 		const exercise = await prisma.exercise.findFirst({
 			where: {
 				id: exerciseId,
@@ -80,18 +88,60 @@ router.post(
 			return res.status(404).json({ message: "Exercise not found" });
 		}
 
-		// 3. add workout
 		const workoutExercise = await prisma.workoutExercise.create({
 			data: {
 				workoutId,
 				exerciseId,
-				reps,
-				sets,
-				weight,
 			},
 		});
 
 		return res.status(201).json(workoutExercise);
+	},
+);
+
+router.post(
+	"/workout-exercises/:id/sets",
+	authMiddleware,
+	async (req: RequestWorkout, res) => {
+		if (!req.user) {
+			return res.status(401).json({ message: "Unauthorized" });
+		}
+		const { userId } = req.user;
+		const { reps, weight, unit } = req.body;
+		const workoutExerciseId = req.params.id;
+
+		console.log(workoutExerciseId, reps, weight, unit, "logger heere");
+
+		const workoutExercise = await prisma.workoutExercise.findFirst({
+			where: {
+				id: workoutExerciseId,
+				workout: {
+					userId,
+				},
+			},
+		});
+
+		if (!workoutExercise) {
+			return res.status(404).json({ message: "Workout exercise not found" });
+		}
+
+		const count = await prisma.exerciseSet.count({
+			where: { workoutExerciseId },
+		});
+
+		const nextOrder = count + 1;
+
+		const exerciseSet = await prisma.exerciseSet.create({
+			data: {
+				workoutExerciseId: workoutExerciseId,
+				reps: reps,
+				weight: weight ?? null,
+				unit: unit ?? null,
+				order: nextOrder,
+			},
+		});
+
+		return res.status(201).json(exerciseSet);
 	},
 );
 

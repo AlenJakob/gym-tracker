@@ -47,13 +47,24 @@ model WorkoutExercise {
     workoutId  String
     exerciseId String
 
-    workout  Workout  @relation(fields: [workoutId], references: [id])
+    workout  Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
     exercise Exercise @relation(fields: [exerciseId], references: [id])
 
-    order Int @default(0)
+    order        Int           @default(0)
+    exerciseSets ExerciseSet[]
+}
 
-    sets   Int?
-    reps   Int?
+model ExerciseSet {
+    id String @id @default(cuid())
+
+    workoutExerciseId String
+    workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+    reps   Int
     weight Float?
-    note   String?
+    unit   String? // "kg", "lbs", "bodyweight", "s", "km"
+
+    order Int
+
+    @@index([workoutExerciseId])
 }
