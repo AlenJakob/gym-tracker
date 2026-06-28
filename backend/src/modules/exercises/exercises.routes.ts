@@ -13,6 +13,21 @@ router.post("/", authMiddleware, async (req, res) => {
 	const { name: exerciseName } = req.body;
 	const { userId } = req.user;
 
+	const checkExercise = await prisma.exercise.findFirst({
+		where: {
+			name: exerciseName,
+			userId,
+		},
+	});
+
+	if (checkExercise) {
+		return res
+			.status(409)
+			.json({
+				message: `Exercise with this name: ${exerciseName} already exist`,
+			});
+	}
+
 	const exercise = await prisma.exercise.create({
 		data: {
 			name: exerciseName,
@@ -21,7 +36,7 @@ router.post("/", authMiddleware, async (req, res) => {
 		},
 	});
 
-	return res.json(exercise);
+	return res.status(201).json(exercise);
 });
 
 // Get all user saved exercises
